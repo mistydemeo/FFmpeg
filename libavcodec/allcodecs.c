@@ -623,6 +623,7 @@ static void register_all(void)
     REGISTER_PARSER(AAC_LATM,           aac_latm);
     REGISTER_PARSER(AC3,                ac3);
     REGISTER_PARSER(ADX,                adx);
+    REGISTER_PARSER(ATRAC3P,            atrac3p);
     REGISTER_PARSER(BMP,                bmp);
     REGISTER_PARSER(CAVSVIDEO,          cavsvideo);
     REGISTER_PARSER(COOK,               cook);
