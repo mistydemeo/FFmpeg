@@ -121,6 +121,7 @@ typedef struct MpegDemuxContext {
     int dvd;
     int imkh_cctv;
     int raw_ac3;
+    int sony_psmf; // true if Play Station Movie file signature is present
 } MpegDemuxContext;
 
 static int mpegps_read_header(AVFormatContext *s)
@@ -135,6 +136,8 @@ static int mpegps_read_header(AVFormatContext *s)
     avio_get_str(s->pb, 6, buffer, sizeof(buffer));
     if (!memcmp("IMKH", buffer, 4)) {
         m->imkh_cctv = 1;
+    } else if (!memcmp("PSMF00", buffer, 6)) {
+        m->sony_psmf = 1;
     } else if (!memcmp("Sofdec", buffer, 6)) {
         m->sofdec = 1;
     } else
@@ -429,7 +432,7 @@ redo:
         goto redo;
     }
 
-    if (startcode == PRIVATE_STREAM_1) {
+    if (startcode == PRIVATE_STREAM_1 && !m->sony_psmf) {
         int ret = ffio_ensure_seekback(s->pb, 2);
 
         if (ret < 0)
@@ -555,6 +558,28 @@ redo:
         else
             request_probe= 1;
         type = AVMEDIA_TYPE_VIDEO;
+    } else if (startcode == PRIVATE_STREAM_1 && m->sony_psmf) {
+        uint8_t stream_id;
+
+        if (len < 2)
+            goto skip;
+        stream_id = avio_r8(s->pb);
+        avio_r8(s->pb); // skip padding
+        len -= 2;
+        if (!(stream_id & 0xF0)) { // seems like we got an ATRAC stream
+            /* check if an appropriate stream already exists */
+            for (i = 0; i < s->nb_streams; i++) {
+                st = s->streams[i];
+                if (st->codec->codec_type == AVMEDIA_TYPE_AUDIO &&
+                    st->codec->codec_id == AV_CODEC_ID_ATRAC3P &&
+                    st->id - 0x1BD0 == (stream_id & 0xF))
+                    goto found;
+            }
+
+            startcode = 0x1BD0 + (stream_id & 0xF);
+            type      = AVMEDIA_TYPE_AUDIO;
+            codec_id  = AV_CODEC_ID_ATRAC3P;
+        }
     } else if (startcode == PRIVATE_STREAM_2) {
         type = AVMEDIA_TYPE_DATA;
         codec_id = AV_CODEC_ID_DVD_NAV;
