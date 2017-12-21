@@ -46,6 +46,7 @@ version <next>:
 - High Voltage Software ADPCM decoder
 - LEGO Racers ALP (.tun & .pcm) demuxer
 - AMQP 0-9-1 protocol (RabbitMQ)
+- ATRAC-3 support for Sony PSP MPEG files
 
 
 version 4.2:
