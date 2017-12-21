@@ -33,6 +33,7 @@ version <next>:
 - deconvolve video filter
 - entropy video filter
 - hilbert audio filter source
+- ATRAC-3 support for Sony PSP MPEG files
 
 
 version 3.4:
