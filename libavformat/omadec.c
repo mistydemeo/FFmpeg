@@ -48,6 +48,7 @@
 #include "libavutil/intreadwrite.h"
 #include "libavutil/des.h"
 #include "libavutil/mathematics.h"
+#include "libavcodec/oma.h"
 #include "oma.h"
 #include "pcm.h"
 #include "id3v2.h"
@@ -432,14 +433,14 @@ static int oma_read_header(AVFormatContext *s)
     st->start_time = 0;
     st->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codecpar->codec_tag  = buf[32];
-    st->codecpar->codec_id   = ff_codec_get_id(ff_oma_codec_tags,
+    st->codecpar->codec_id   = ff_codec_get_id(oma_codec_tags,
                                                st->codecpar->codec_tag);
 
     oc->read_packet = read_packet;
 
     switch (buf[32]) {
     case OMA_CODECID_ATRAC3:
-        samplerate = ff_oma_srate_tab[(codec_params >> 13) & 7] * 100;
+        samplerate = oma_srate_tab[(codec_params >> 13) & 7] * 100;
         if (!samplerate) {
             av_log(s, AV_LOG_ERROR, "Unsupported sample rate\n");
             return AVERROR_INVALIDDATA;
@@ -479,10 +480,10 @@ static int oma_read_header(AVFormatContext *s)
                    "Invalid ATRAC-X channel id: %"PRIu32"\n", channel_id);
             return AVERROR_INVALIDDATA;
         }
-        st->codecpar->channel_layout = ff_oma_chid_to_native_layout[channel_id - 1];
-        st->codecpar->channels       = ff_oma_chid_to_num_channels[channel_id - 1];
+        st->codecpar->channel_layout = oma_chid_to_native_layout[channel_id - 1];
+        st->codecpar->channels       = oma_chid_to_num_channels[channel_id - 1];
         framesize = ((codec_params & 0x3FF) * 8) + 8;
-        samplerate = ff_oma_srate_tab[(codec_params >> 13) & 7] * 100;
+        samplerate = oma_srate_tab[(codec_params >> 13) & 7] * 100;
         if (!samplerate) {
             av_log(s, AV_LOG_ERROR, "Unsupported sample rate\n");
             return AVERROR_INVALIDDATA;
@@ -610,5 +611,5 @@ AVInputFormat ff_oma_demuxer = {
     .read_close     = oma_read_close,
     .flags          = AVFMT_GENERIC_INDEX,
     .extensions     = "oma,omg,aa3",
-    .codec_tag      = (const AVCodecTag* const []){ff_oma_codec_tags, 0},
+    .codec_tag      = (const AVCodecTag* const []){oma_codec_tags, 0},
 };

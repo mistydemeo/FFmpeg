@@ -24,6 +24,7 @@
 #include "avio_internal.h"
 #include "id3v2.h"
 #include "internal.h"
+#include "libavcodec/oma.h"
 #include "oma.h"
 #include "rawenc.h"
 
@@ -38,13 +39,13 @@ static av_cold int oma_write_header(AVFormatContext *s)
     /* check for support of the format first */
 
     for (srate_index = 0; ; srate_index++) {
-        if (ff_oma_srate_tab[srate_index] == 0) {
+        if (oma_srate_tab[srate_index] == 0) {
             av_log(s, AV_LOG_ERROR, "Sample rate %d not supported in OpenMG audio\n",
                    par->sample_rate);
             return AVERROR(EINVAL);
         }
 
-        if (ff_oma_srate_tab[srate_index] * 100 == par->sample_rate)
+        if (oma_srate_tab[srate_index] * 100 == par->sample_rate)
             break;
     }
 
@@ -102,6 +103,6 @@ AVOutputFormat ff_oma_muxer = {
     .audio_codec       = AV_CODEC_ID_ATRAC3,
     .write_header      = oma_write_header,
     .write_packet      = ff_raw_write_packet,
-    .codec_tag         = (const AVCodecTag* const []){ff_oma_codec_tags, 0},
+    .codec_tag         = (const AVCodecTag* const []){oma_codec_tags, 0},
     .flags             = AVFMT_NOTIMESTAMPS,
 };
