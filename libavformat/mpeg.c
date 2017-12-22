@@ -575,8 +575,8 @@ redo:
         len--;
         for (i = 0; i < s->nb_streams; i++) {
             st = s->streams[i];
-            if (st->codec->codec_type == AVMEDIA_TYPE_AUDIO &&
-                st->codec->codec_id == AV_CODEC_ID_ATRAC3P &&
+            if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO &&
+                st->codecpar->codec_id == AV_CODEC_ID_ATRAC3P &&
                 st->id - 0x1BD0 == (startcode & 0xF))
                 goto found;
         }
