@@ -31,6 +31,10 @@ FATE_ATRAC3P += fate-atrac3p-2
 fate-atrac3p-2: CMD = pcm -i $(TARGET_SAMPLES)/atrac3p/sonateno14op27-2-cut.aa3
 fate-atrac3p-2: REF = $(SAMPLES)/atrac3p/sonateno14op27-2-cut.pcm
 
+FATE_ATRAC3P += fate-atrac3p-3
+fate-atrac3p-3: CMD = pcm -i $(TARGET_SAMPLES)/atrac3p/bgm01.at3
+fate-atrac3p-3: REF = $(SAMPLES)/atrac3p/bgm01.s16
+
 FATE_ATRAC3P-$(call DEMDEC, OMA, ATRAC3P) += $(FATE_ATRAC3P)
 
 FATE_ATRAC_ALL = $(FATE_ATRAC1-yes) $(FATE_ATRAC3-yes) $(FATE_ATRAC3P-yes)
