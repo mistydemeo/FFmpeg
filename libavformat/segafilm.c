@@ -43,6 +43,7 @@ typedef struct film_sample {
   int64_t sample_offset;
   unsigned int sample_size;
   int64_t pts;
+  uint32_t duration;
   int keyframe;
 } film_sample;
 
@@ -226,6 +227,7 @@ static int film_read_header(AVFormatContext *s)
             ret = AVERROR_INVALIDDATA;
             goto fail;
         }
+        film->sample_table[i].duration = AV_RB32(&scratch[12]);
         if (AV_RB32(&scratch[8]) == 0xFFFFFFFF) {
             film->sample_table[i].stream = film->audio_stream_index;
             film->sample_table[i].pts = audio_frame_counter;
@@ -270,7 +272,6 @@ static int film_read_packet(AVFormatContext *s,
     FilmDemuxContext *film = s->priv_data;
     AVIOContext *pb = s->pb;
     film_sample *sample;
-    film_sample *next_sample = NULL;
     int next_sample_id;
     int ret = 0;
 
@@ -278,20 +279,6 @@ static int film_read_packet(AVFormatContext *s,
         return AVERROR_EOF;
 
     sample = &film->sample_table[film->current_sample];
-
-    /* Find the next sample from the same stream, assuming there is one;
-     * this is used to calculate the duration below */
-    next_sample_id = film->current_sample + 1;
-    while (next_sample == NULL) {
-        if (next_sample_id >= film->sample_count)
-            break;
-
-        next_sample = &film->sample_table[next_sample_id];
-        if (next_sample->stream != sample->stream) {
-            next_sample = NULL;
-            next_sample_id++;
-        }
-    }
 
     /* position the stream (will probably be there anyway) */
     avio_seek(pb, sample->sample_offset, SEEK_SET);
@@ -304,8 +291,7 @@ static int film_read_packet(AVFormatContext *s,
     pkt->dts = sample->pts;
     pkt->pts = sample->pts;
     pkt->flags |= sample->keyframe ? AV_PKT_FLAG_KEY : 0;
-    if (next_sample != NULL)
-        pkt->duration = next_sample->pts - sample->pts;
+    pkt->duration = sample->duration;
 
     film->current_sample++;
 
